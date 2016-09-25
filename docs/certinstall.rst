@@ -65,7 +65,7 @@ See http://windows.microsoft.com/en-ca/windows/import-export-certificates-privat
 Windows (automated)
 ^^^^^^^^^^^^^^^^^^^
 
->>> certutil.exe -importpfx mitmproxy-ca-cert.p12
+>>> certutil.exe -importpfx Root mitmproxy-ca-cert.p12
 
 See also: https://technet.microsoft.com/en-us/library/cc732443.aspx
 
@@ -90,20 +90,28 @@ Chrome on Linux
 See https://code.google.com/p/chromium/wiki/LinuxCertManagement
 
 
-More on mitmproxy certificates
-------------------------------
+The mitmproxy certificate authority
+-----------------------------------
 
 The first time **mitmproxy** or **mitmdump** is run, the mitmproxy Certificate
 Authority (CA) is created in the config directory (``~/.mitmproxy`` by default).
 This CA is used for on-the-fly generation of dummy certificates for each of the
 SSL sites that your client visits. Since your browser won't trust the
-mitmproxy CA out of the box , you will see an SSL certificate warning every
+mitmproxy CA out of the box, you will see an SSL certificate warning every
 time you visit a new SSL domain through mitmproxy. When you are testing a
 single site through a browser, just accepting the bogus SSL cert manually is
 not too much trouble, but there are a many circumstances where you will want to
 configure your testing system or browser to trust the mitmproxy CA as a
-signing root authority. For security reasons, the mitmproxy CA is generated uniquely on the first
-start and is not shared between mitmproxy installations on different devices.
+signing root authority. For security reasons, the mitmproxy CA is generated uniquely on the first start and is not shared between mitmproxy installations on different devices.
+
+Certificate Pinning
+^^^^^^^^^^^^^^^^^^^
+
+Some applications employ `Certificate Pinning`_ to prevent man-in-the-middle attacks.
+This means that **mitmproxy** and **mitmdump's** certificates will not be
+accepted by these applications without modifying them. It is recommended to use the
+:ref:`passthrough` feature in order to prevent **mitmproxy** and **mitmdump** from intercepting
+traffic to these specific domains. If you want to intercept the pinned connections, you need to patch the application manually. For Android and (jailbroken) iOS devices, various tools exist to accomplish this.
 
 
 CA and cert files
@@ -167,8 +175,21 @@ no such file exists, it will be generated automatically.
 Using a client side certificate
 -------------------------------
 
-You can use a client certificate by passing the ``--client-certs DIRECTORY`` option to mitmproxy.
-If you visit example.org, mitmproxy looks for a file named ``example.org.pem`` in the specified
-directory and uses this as the client cert. The certificate file needs to be in the PEM format and
-should contain both the unencrypted private key and the certificate.
+You can use a client certificate by passing the ``--client-certs DIRECTORY|FILE``
+option to mitmproxy. Using a directory allows certs to be selected based on
+hostname, while using a filename allows a single specific certificate to be used for
+all SSL connections. Certificate files must be in the PEM format and should
+contain both the unencrypted private key and the certificate.
 
+Multiple certs by Hostname
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you've specified a directory to ``--client-certs``, then the following
+behavior will be taken:
+
+If you visit example.org, mitmproxy looks for a file named ``example.org.pem`` in the specified
+directory and uses this as the client cert.
+
+
+
+.. _Certificate Pinning: http://security.stackexchange.com/questions/29988/what-is-certificate-pinning/
